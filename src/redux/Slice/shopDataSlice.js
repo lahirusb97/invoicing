@@ -21,7 +21,6 @@ export const shopDataSlice = createSlice({
         })
       );
       state.loading = loading;
-      console.log(state.CATEGORYS);
     },
   },
 });

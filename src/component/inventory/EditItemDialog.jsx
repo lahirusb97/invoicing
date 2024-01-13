@@ -34,11 +34,11 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
+import { editDialog } from "@/redux/Slice/editOpenSlice";
 
-export default function AddItemDialog() {
-  const [open, setOpen] = React.useState(false);
-
+export default function EditItemDialog() {
   const [checked, setChecked] = React.useState(false);
+  const [checked2, setChecked2] = React.useState(false);
   const [nameError, setNameError] = React.useState("Enter Item Name");
   const [namecategoryError, setcategoryError] = React.useState(
     "Enter product category"
@@ -48,6 +48,9 @@ export default function AddItemDialog() {
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
   const CATEGORYS = useSelector((state) => state.shop_data.CATEGORYS);
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
+  const open = useSelector((state) => state.edit_open.OPEN);
+  const ITEM = useSelector((state) => state.edit_open.ITEM);
+
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   //USE SELECTORS
   const dispatch = useDispatch();
@@ -72,35 +75,52 @@ export default function AddItemDialog() {
     handleSubmit,
     setValue,
     setError,
+    getValues,
+
     reset,
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
   const selectcategory = (event, value) => {
     setValue("category", value);
   };
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  React.useEffect(() => {
+    if (open) {
+      setValue("name", ITEM.name);
+      setValue("price", ITEM.price);
+      setValue("cost", ITEM.cost);
+      setValue("stock", ITEM.stock);
+      setValue("alert", ITEM.alert);
+      setValue("modal", ITEM.modal);
+      setValue("warenty", ITEM.warenty);
+      setValue("category", ITEM.category);
+    }
+  }, [open]);
 
   const handleClose = () => {
-    setOpen(false);
+    dispatch(editDialog(false));
+    reset({
+      name: "", // set specific values if needed
+      price: "",
+      cost: "",
+      stock: "",
+      alert: 0,
+      modal: "",
+      warenty: "",
+      category: "",
+    });
   };
+  console.log(checked2);
   const onSubmit = (data) => {
     AddNewProductData(data);
   };
+  console.log(ITEM.category);
   const AddNewProductData = async (data) => {
     const checkName = PRODUCT_DATA.some((item) => item.name === data.name);
     const checkcategory = CATEGORYS.some(
       (item) => item["Name"] === data.category
     );
     // ERRO HANDLE
-    if (checkName) {
-      setError("name", {
-        type: "manual",
-        message: "Product name already exists",
-      });
-      setNameError("Product name already exists");
-    }
+
     if (checked) {
       if (checkcategory) {
         setError("category", {
@@ -112,116 +132,68 @@ export default function AddItemDialog() {
     }
     // ERRO HANDLE
 
-    if (!checkName) {
-      if (checked) {
-        if (!checkcategory) {
-          const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
-          await updateDoc(shopRef, {
-            category: {
-              ...SHOP_DATA["category"],
-              [data.category]: {
-                Count: 1,
-              },
-            },
-          })
-            .then(() => {
-              const db = getDatabase();
-              const newPostKey = push(
-                child(ref(db), "shop/" + USER_DATA["shop_id"])
-              ).key;
-              const postData = { ...data, id: newPostKey };
-
-              const updates = {};
-              updates["/shop/" + USER_DATA["shop_id"] + "/" + newPostKey] =
-                postData;
-
-              update(ref(db), updates)
-                .then(() => {
-                  dispatch(
-                    openScackbar({
-                      open: true,
-                      type: "success",
-                      msg: `New Product Added `,
-                    })
-                  );
-                  reset({
-                    name: "", // set specific values if needed
-                    price: "",
-                    cost: "",
-                    stock: "",
-                    alert: 0,
-                    modal: "",
-                    warenty: "",
-                    category: "",
-                  });
-                  setValue("");
-                })
-                .catch((err) => {
-                  dispatch(
-                    openScackbar({
-                      open: true,
-                      type: "error",
-                      msg: err.message,
-                    })
-                  );
-                });
-            })
-            .catch((err) => {
-              dispatch(
-                openScackbar({
-                  open: true,
-                  type: "error",
-                  msg: err.message,
-                })
-              );
-            });
-        }
-      } else {
+    if (checked) {
+      if (!checkcategory) {
         const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
-        const category = CATEGORYS.find(
-          (item) => item["Name"] === data.category
+        const categoryOLD = CATEGORYS.find(
+          (item) => item["Name"] === ITEM.category
         );
+
         await updateDoc(shopRef, {
           category: {
             ...SHOP_DATA["category"],
-            [data.category]: {
-              Count: category.Count + 1,
+            [ITEM.category]: {
+              Count: categoryOLD.Count - 1,
             },
           },
         })
           .then(() => {
+            updateDoc(shopRef, {
+              category: {
+                ...SHOP_DATA["category"],
+                [data.category]: {
+                  Count: 1,
+                },
+              },
+            });
+          })
+
+          .then(() => {
             const db = getDatabase();
 
-            const newPostKey = push(
-              child(ref(db), "shop/" + USER_DATA["shop_id"])
-            ).key;
-            const postData = { ...data, id: newPostKey };
-
             const updates = {};
-            updates["/shop/" + USER_DATA["shop_id"] + "/" + newPostKey] =
-              postData;
+            updates["/shop/" + USER_DATA["shop_id"] + "/" + ITEM["id"]] = data;
 
-            update(ref(db), updates).then(() => {
-              dispatch(
-                openScackbar({
-                  open: true,
-                  type: "success",
-                  msg: `New Product Added `,
-                })
-              );
-
-              reset({
-                name: "", // set specific values if needed
-                price: "",
-                cost: "",
-                stock: "",
-                alert: 0,
-                modal: "",
-                warenty: "",
-                category: "",
+            update(ref(db), updates)
+              .then(() => {
+                dispatch(
+                  openScackbar({
+                    open: true,
+                    type: "success",
+                    msg: `New Product Added `,
+                  })
+                );
+                reset({
+                  name: "", // set specific values if needed
+                  price: "",
+                  cost: "",
+                  stock: "",
+                  alert: 0,
+                  modal: "",
+                  warenty: "",
+                  category: "",
+                });
+                setValue("");
+              })
+              .catch((err) => {
+                dispatch(
+                  openScackbar({
+                    open: true,
+                    type: "error",
+                    msg: err.message,
+                  })
+                );
               });
-            });
-            setValue("");
           })
           .catch((err) => {
             dispatch(
@@ -234,12 +206,73 @@ export default function AddItemDialog() {
           });
       }
     }
+    if (checked2) {
+      const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
+      const category = CATEGORYS.find((item) => item["Name"] === data.category);
+      const categoryOLD = CATEGORYS.find(
+        (item) => item["Name"] === ITEM.category
+      );
+      console.log(categoryOLD);
+      await updateDoc(shopRef, {
+        category: {
+          ...SHOP_DATA["category"],
+          [ITEM.category]: {
+            Count: categoryOLD.Count - 1,
+          },
+        },
+      })
+        .then(() => {
+          updateDoc(shopRef, {
+            category: {
+              ...SHOP_DATA["category"],
+              [data.category]: {
+                Count: category.Count + 1,
+              },
+            },
+          });
+        })
+
+        .then(() => {
+          const db = getDatabase();
+
+          const updates = {};
+          updates["/shop/" + USER_DATA["shop_id"] + "/" + ITEM["id"]] = data;
+
+          update(ref(db), updates).then(() => {
+            dispatch(
+              openScackbar({
+                open: true,
+                type: "success",
+                msg: `New Product Added `,
+              })
+            );
+
+            reset({
+              name: "", // set specific values if needed
+              price: "",
+              cost: "",
+              stock: "",
+              alert: 0,
+              modal: "",
+              warenty: "",
+              category: "",
+            });
+          });
+          setValue("");
+        })
+        .catch((err) => {
+          dispatch(
+            openScackbar({
+              open: true,
+              type: "error",
+              msg: err.message,
+            })
+          );
+        });
+    }
   };
   return (
     <React.Fragment>
-      <Button sx={{ mb: 1 }} variant="contained" onClick={handleClickOpen}>
-        Add Items
-      </Button>
       <Dialog
         fullWidth
         open={open}
@@ -321,12 +354,28 @@ export default function AddItemDialog() {
                     checked={checked}
                     onChange={(e) => {
                       setChecked(e.target.checked);
+                      setChecked2(false);
                       setValue("category", "");
                     }}
                     inputProps={{ "aria-label": "controlled" }}
                   />
                 }
-                label="Add New Category"
+                label="Create New Category"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={checked2}
+                    onChange={(e) => {
+                      setChecked2(e.target.checked);
+                      setChecked(false);
+
+                      setValue("category", "");
+                    }}
+                    inputProps={{ "aria-label": "controlled" }}
+                  />
+                }
+                label="Switch Category"
               />
               {checked ? (
                 <div>
@@ -342,7 +391,7 @@ export default function AddItemDialog() {
                     helperText={errors.category && namecategoryError}
                   />
                 </div>
-              ) : (
+              ) : checked2 ? (
                 <Autocomplete
                   sx={{ marginTop: "1em" }}
                   fullWidth
@@ -359,10 +408,12 @@ export default function AddItemDialog() {
                       error={errors.category ? true : false}
                       helperText={errors.category && errors.category.message}
                       {...params}
-                      label="Movie"
+                      label="Change Category"
                     />
                   )}
                 />
+              ) : (
+                <></>
               )}
             </div>
             <TextField
@@ -396,7 +447,7 @@ export default function AddItemDialog() {
               helperText={errors.warenty && "Enter Item Warenty"}
             />
             <Button sx={{ marginTop: "1em" }} type="submit" variant="contained">
-              Add Item
+              Add Items
             </Button>
           </form>
         </DialogContent>

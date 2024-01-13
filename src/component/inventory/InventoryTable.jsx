@@ -1,11 +1,14 @@
 "use client";
 import React, { useMemo } from "react";
 import { MaterialReactTable } from "material-react-table";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { Delete, Edit } from "@mui/icons-material";
+import { editDialog, setItemData } from "@/redux/Slice/editOpenSlice";
 
 const InventoryTable = ({ state, setState, setEdit, edit }) => {
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
-
+  const dispatch = useDispatch();
   const columns = useMemo(
     () => [
       {
@@ -41,6 +44,26 @@ const InventoryTable = ({ state, setState, setEdit, edit }) => {
       }}
       columns={columns}
       data={PRODUCT_DATA}
+      enableRowActions
+      renderRowActions={({ row }) => (
+        <Box sx={{ display: "flex", gap: "1rem" }}>
+          <Tooltip title="Edit">
+            <IconButton
+              onClick={() => {
+                dispatch(editDialog(true));
+                dispatch(setItemData(PRODUCT_DATA[row.id]));
+              }}
+            >
+              <Edit />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton color="error" onClick={() => handleDelete(row)}>
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
       muiTableBodyRowProps={({ row }) => ({
         onClick: (event) => {
           // console.log(data[row.index]);

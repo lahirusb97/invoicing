@@ -7,8 +7,6 @@ import MuiAppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import List from "@mui/material/List";
 import CssBaseline from "@mui/material/CssBaseline";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -17,9 +15,6 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
-import { Card, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import {
   Calculate,
   Dashboard,
@@ -30,14 +25,14 @@ import {
   Settings,
 } from "@mui/icons-material";
 import Link from "next/link";
-
 import { auth } from "@/firebase/config";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { redirect, useRouter } from "next/navigation";
-import { firestore } from "@/firebase/config";
-import { collection, getDocs } from "firebase/firestore";
-import { useCollection } from "react-firebase-hooks/firestore";
 import { getAuth, signOut } from "firebase/auth";
+import { useDispatch, useSelector } from "react-redux";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { setProductData } from "@/redux/Slice/productDataSlice";
+import { doc, getDoc, getFirestore, onSnapshot } from "firebase/firestore";
+import { setShopData } from "@/redux/Slice/shopDataSlice";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -111,9 +106,11 @@ export default function Nav({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [age, setAge] = React.useState("");
-
   const [user, stateLoading, stateError] = useAuthState(auth);
 
+  //REDUX STORE LOADING
+  const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
+  const dispatch = useDispatch();
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -133,8 +130,33 @@ export default function Nav({ children }) {
     { name: "Audit", icon: <Calculate />, rPath: "/admin/audit" },
     { name: "Settings", icon: <Settings />, rPath: "/admin/settings" },
   ];
-  const router = useRouter();
-
+  React.useEffect(() => {
+    if (USER_DATA["shop_id"]) {
+      dispatch(setProductData({ product: [], loading: true }));
+      const db = getDatabase();
+      const shopRef = ref(db, "shop/" + USER_DATA["shop_id"]);
+      onValue(shopRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          dispatch(
+            setProductData({ product: Object.values(data), loading: false })
+          );
+          shopData(USER_DATA["shop_id"]);
+        } else {
+          dispatch(setProductData({ product: [], loading: false }));
+        }
+      });
+    }
+  }, [USER_DATA]);
+  const shopData = (id) => {
+    const unsub = onSnapshot(doc(getFirestore(), "shop", id), (doc) => {
+      if (doc.exists()) {
+        dispatch(setShopData({ shopdata: doc.data(), loading: false }));
+      } else {
+        dispatch(setShopData({ shopdata: [], loading: false }));
+      }
+    });
+  };
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -206,9 +228,7 @@ export default function Nav({ children }) {
               onClick={async () => {
                 const auth = getAuth();
                 signOut(auth)
-                  .then(() => {
-                    router.push("/");
-                  })
+                  .then(() => {})
                   .catch((error) => {
                     // An error happened.
                   });

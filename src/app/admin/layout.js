@@ -1,13 +1,11 @@
 import Nav from "@/component/Nav";
-import { Box } from "@mui/material";
 
+import RefreshHandler from "@/component/Auth/RefreshHandler";
 export default function RootLayout({ children }) {
   return (
     <div className="flex" lang="en">
       <Nav />
-      <Box component="main" sx={{ flexGrow: 1, mt: 8, ml: 1 }}>
-        {children}
-      </Box>
+      <RefreshHandler>{children}</RefreshHandler>
     </div>
   );
 }

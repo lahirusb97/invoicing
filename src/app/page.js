@@ -16,6 +16,9 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useDispatch } from "react-redux";
+import { setuserData } from "@/redux/Slice/userDataSlice";
+
 export default function Home() {
   const [user] = useAuthState(auth);
   const route = useRouter();
@@ -23,23 +26,19 @@ export default function Home() {
   const [password, setPassword] = useState("qwertyu");
   const [uidCheck, setUidCheck] = useState(false);
   const [SignInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
+  const dispatch = useDispatch();
 
-  const router = useRouter();
   const handleLogin = async () => {
     try {
       await SignInWithEmailAndPassword(email, password);
       getuserData();
     } catch (error) {
       console.error("Login failed", error);
-      return;
     }
   };
   useEffect(() => {
     if (user) {
       getuserData();
-      if (uidCheck) {
-        route.push("/admin/dashboard");
-      }
     }
   }, [user]);
 
@@ -51,15 +50,16 @@ export default function Home() {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
+            console.log(doc.data());
             if (user.uid === doc.data().uid) {
-              route.push("/admin/dashboard");
-              setUidCheck(true);
-            } else {
-              setUidCheck(false);
+              dispatch(setuserData({ user: doc.data(), loading: false }));
+              route.push("/admin");
             }
           });
         } else {
+          dispatch(setuserData({ user: [], loading: false }));
+          route.push("/register");
+
           setUidCheck(false);
         }
       });

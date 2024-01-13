@@ -1,8 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Nav from "@/component/Nav";
-import { Suspense } from "react";
-
+import ReduxProvider from "@/redux/ReduxProvider";
+import { ThemeProvider } from "@mui/material";
+import theme from "./theme/theme";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -13,7 +13,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white">{children}</body>
+      <body className="min-h-screen bg-white">
+        <ReduxProvider>
+          <ThemeProvider theme={theme}>{children}</ThemeProvider>
+        </ReduxProvider>
+      </body>
     </html>
   );
 }

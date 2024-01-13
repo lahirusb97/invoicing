@@ -110,6 +110,7 @@ export default function Nav({ children }) {
 
   //REDUX STORE LOADING
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
+
   const dispatch = useDispatch();
   const handleDrawerOpen = () => {
     setOpen(true);

@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   SHOP_DATA: [],
+  CATEGORYS: [],
   loading: true,
   error: false,
 };
@@ -13,7 +14,14 @@ export const shopDataSlice = createSlice({
     setShopData: (state, action) => {
       const { shopdata, loading } = action.payload;
       state.SHOP_DATA = shopdata;
+      state.CATEGORYS = Object.entries(shopdata.category).map(
+        ([Name, { Count }]) => ({
+          Name,
+          Count,
+        })
+      );
       state.loading = loading;
+      console.log(state.CATEGORYS);
     },
   },
 });

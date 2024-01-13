@@ -30,13 +30,14 @@ import {
   arrayUnion,
   doc,
   getFirestore,
+  increment,
   updateDoc,
 } from "firebase/firestore";
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 
 export default function AddItemDialog() {
   const [open, setOpen] = React.useState(false);
-  const [category, setCategory] = React.useState("");
+
   const [checked, setChecked] = React.useState(false);
   const [nameError, setNameError] = React.useState("Enter Item Name");
   const [namecategoryError, setcategoryError] = React.useState(
@@ -45,6 +46,7 @@ export default function AddItemDialog() {
   //USE SELECTORS
   const SHOP_DATA = useSelector((state) => state.shop_data.SHOP_DATA);
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
+  const CATEGORYS = useSelector((state) => state.shop_data.CATEGORYS);
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   //USE SELECTORS
@@ -74,7 +76,6 @@ export default function AddItemDialog() {
   } = useForm({ resolver: yupResolver(schema) });
   const selectcategory = (event, value) => {
     setValue("category", value);
-    setCategory(SHOP_DATA["category"].find((item) => item["Name"] === value));
   };
   const handleClickOpen = () => {
     setOpen(true);
@@ -88,7 +89,7 @@ export default function AddItemDialog() {
   };
   const AddNewProductData = async (data) => {
     const checkName = PRODUCT_DATA.some((item) => item.name === data.name);
-    const checkcategory = SHOP_DATA["category"].some(
+    const checkcategory = CATEGORYS.some(
       (item) => item["Name"] === data.category
     );
     // ERRO HANDLE
@@ -115,10 +116,12 @@ export default function AddItemDialog() {
         if (!checkcategory) {
           const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
           await updateDoc(shopRef, {
-            category: arrayUnion({
-              Name: data.category,
-              Count: 1,
-            }),
+            category: {
+              ...SHOP_DATA["category"],
+              [data.category]: {
+                Count: 1,
+              },
+            },
           })
             .then(() => {
               const db = getDatabase();
@@ -163,14 +166,20 @@ export default function AddItemDialog() {
         }
       } else {
         const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
-        const cateupdate = SHOP_DATA["category"];
+        const category = CATEGORYS.find(
+          (item) => item["Name"] === data.category
+        );
         await updateDoc(shopRef, {
-          category: arrayUnion({
-            Name: data.category,
-            Count: 1,
-          }),
+          category: {
+            ...SHOP_DATA["category"],
+            [data.category]: {
+              Count: category.Count + 1,
+            },
+          },
         })
-          .then(() => {})
+          .then(() => {
+            console.log("sucess");
+          })
           .catch((err) => {
             console.log(err);
           });
@@ -303,7 +312,7 @@ export default function AddItemDialog() {
                   id="combo-box-demo"
                   options={
                     SHOP_DATA["category"]
-                      ? SHOP_DATA["category"].map((item) => item["Name"])
+                      ? CATEGORYS.map((item) => item["Name"])
                       : []
                   }
                   onChange={selectcategory}

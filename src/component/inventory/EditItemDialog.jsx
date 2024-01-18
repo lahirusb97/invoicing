@@ -109,168 +109,54 @@ export default function EditItemDialog() {
       category: "",
     });
   };
-  console.log(checked2);
+
   const onSubmit = (data) => {
     AddNewProductData(data);
   };
-  console.log(ITEM.category);
+
   const AddNewProductData = async (data) => {
-    const checkName = PRODUCT_DATA.some((item) => item.name === data.name);
-    const checkcategory = CATEGORYS.some(
-      (item) => item["Name"] === data.category
-    );
-    // ERRO HANDLE
+    const checkName = PRODUCT_DATA.filter((item) => item.name === ITEM.name);
+    console.log(checkName.length);
 
-    if (checked) {
-      if (checkcategory) {
-        setError("category", {
-          type: "manual",
-          message: "Product name already exists",
-        });
-        setcategoryError("Product category already exists");
-      }
-    }
-    // ERRO HANDLE
+    if (checkName.length === 1) {
+      //UPDATE
+      const db = getDatabase();
+      const newPostKey = push(
+        child(ref(db), "shop/" + USER_DATA["shop_id"])
+      ).key;
+      const postData = { ...data, id: ITEM["id"] };
 
-    if (checked) {
-      if (!checkcategory) {
-        const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
-        const categoryOLD = CATEGORYS.find(
-          (item) => item["Name"] === ITEM.category
+      const updates = {};
+      updates["/shop/" + USER_DATA["shop_id"] + "/" + ITEM["id"]] = postData;
+      update(ref(db), updates).then(() => {
+        dispatch(
+          openScackbar({
+            open: true,
+            type: "success",
+            msg: `New Product Added `,
+          })
         );
-
-        await updateDoc(shopRef, {
-          category: {
-            ...SHOP_DATA["category"],
-            [ITEM.category]: {
-              Count: categoryOLD.Count - 1,
-            },
-          },
-        })
-          .then(() => {
-            updateDoc(shopRef, {
-              category: {
-                ...SHOP_DATA["category"],
-                [data.category]: {
-                  Count: 1,
-                },
-              },
-            });
-          })
-
-          .then(() => {
-            const db = getDatabase();
-
-            const updates = {};
-            updates["/shop/" + USER_DATA["shop_id"] + "/" + ITEM["id"]] = data;
-
-            update(ref(db), updates)
-              .then(() => {
-                dispatch(
-                  openScackbar({
-                    open: true,
-                    type: "success",
-                    msg: `New Product Added `,
-                  })
-                );
-                reset({
-                  name: "", // set specific values if needed
-                  price: "",
-                  cost: "",
-                  stock: "",
-                  alert: 0,
-                  modal: "",
-                  warenty: "",
-                  category: "",
-                });
-                setValue("");
-              })
-              .catch((err) => {
-                dispatch(
-                  openScackbar({
-                    open: true,
-                    type: "error",
-                    msg: err.message,
-                  })
-                );
-              });
-          })
-          .catch((err) => {
-            dispatch(
-              openScackbar({
-                open: true,
-                type: "error",
-                msg: err.message,
-              })
-            );
-          });
-      }
-    }
-    if (checked2) {
-      const shopRef = doc(getFirestore(), "shop", USER_DATA["shop_id"]);
-      const category = CATEGORYS.find((item) => item["Name"] === data.category);
-      const categoryOLD = CATEGORYS.find(
-        (item) => item["Name"] === ITEM.category
-      );
-      console.log(categoryOLD);
-      await updateDoc(shopRef, {
-        category: {
-          ...SHOP_DATA["category"],
-          [ITEM.category]: {
-            Count: categoryOLD.Count - 1,
-          },
-        },
-      })
-        .then(() => {
-          updateDoc(shopRef, {
-            category: {
-              ...SHOP_DATA["category"],
-              [data.category]: {
-                Count: category.Count + 1,
-              },
-            },
-          });
-        })
-
-        .then(() => {
-          const db = getDatabase();
-
-          const updates = {};
-          updates["/shop/" + USER_DATA["shop_id"] + "/" + ITEM["id"]] = data;
-
-          update(ref(db), updates).then(() => {
-            dispatch(
-              openScackbar({
-                open: true,
-                type: "success",
-                msg: `New Product Added `,
-              })
-            );
-
-            reset({
-              name: "", // set specific values if needed
-              price: "",
-              cost: "",
-              stock: "",
-              alert: 0,
-              modal: "",
-              warenty: "",
-              category: "",
-            });
-          });
-          setValue("");
-        })
-        .catch((err) => {
-          dispatch(
-            openScackbar({
-              open: true,
-              type: "error",
-              msg: err.message,
-            })
-          );
+        reset({
+          name: "", // set specific values if needed
+          price: "",
+          cost: "",
+          stock: "",
+          alert: 0,
+          modal: "",
+          warenty: "",
+          category: "",
         });
+      });
+    }
+    if (checkName.length > 1) {
+      setError("name", {
+        type: "manual",
+        message: "Product name already exists",
+      });
+      setNameError("Product name already exists");
     }
   };
+
   return (
     <React.Fragment>
       <Dialog
@@ -347,75 +233,7 @@ export default function EditItemDialog() {
                 helperText={errors.stock && "Enter Item Quantity"}
               />
             </div>
-            <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={checked}
-                    onChange={(e) => {
-                      setChecked(e.target.checked);
-                      setChecked2(false);
-                      setValue("category", "");
-                    }}
-                    inputProps={{ "aria-label": "controlled" }}
-                  />
-                }
-                label="Create New Category"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={checked2}
-                    onChange={(e) => {
-                      setChecked2(e.target.checked);
-                      setChecked(false);
 
-                      setValue("category", "");
-                    }}
-                    inputProps={{ "aria-label": "controlled" }}
-                  />
-                }
-                label="Switch Category"
-              />
-              {checked ? (
-                <div>
-                  <TextField
-                    fullWidth
-                    sx={{ marginTop: "1em" }}
-                    {...register("category")}
-                    type="text"
-                    id="outlined-basic"
-                    label="Create category Name"
-                    variant="outlined"
-                    error={errors.category ? true : false}
-                    helperText={errors.category && namecategoryError}
-                  />
-                </div>
-              ) : checked2 ? (
-                <Autocomplete
-                  sx={{ marginTop: "1em" }}
-                  fullWidth
-                  disablePortal
-                  id="combo-box-demo"
-                  options={
-                    SHOP_DATA["category"]
-                      ? CATEGORYS.map((item) => item["Name"])
-                      : []
-                  }
-                  onChange={selectcategory}
-                  renderInput={(params) => (
-                    <TextField
-                      error={errors.category ? true : false}
-                      helperText={errors.category && errors.category.message}
-                      {...params}
-                      label="Change Category"
-                    />
-                  )}
-                />
-              ) : (
-                <></>
-              )}
-            </div>
             <TextField
               sx={{ marginTop: "1em" }}
               {...register("alert")}

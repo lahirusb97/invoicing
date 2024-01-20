@@ -13,7 +13,15 @@ export const invoiceSlice = createSlice({
   initialState,
   reducers: {
     addInvoiceItem: (state, action) => {
-      state.INVOICE_ITEM.push(action.payload);
+      const existingItemIndex = state.INVOICE_ITEM.findIndex(
+        (item) => item.id === action.payload.id
+      );
+
+      if (existingItemIndex === -1) {
+        state.INVOICE_ITEM.push(action.payload);
+      } else {
+        state.INVOICE_ITEM[existingItemIndex].qty += action.payload.qty;
+      }
       state.GRAND_TOTAL_COST += action.payload.cost;
       state.GRAND_TOTAL += action.payload.price;
     },

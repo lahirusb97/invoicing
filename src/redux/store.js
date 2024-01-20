@@ -5,6 +5,7 @@ import shopDataSlice from "./Slice/shopDataSlice";
 import SnackBarSlice from "./Slice/SnackBarSlice";
 import editDialog from "./Slice/editOpenSlice";
 import invoiceSlice from "./Slice/invoiceSlice";
+import dashboardSlice from "./Slice/dashboardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     shop_data: shopDataSlice,
     snack_bar: SnackBarSlice,
     edit_open: editDialog,
+    dashboard_data: dashboardSlice,
     invoice_data: invoiceSlice,
   },
 });

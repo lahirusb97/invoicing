@@ -25,14 +25,21 @@ import {
   Settings,
 } from "@mui/icons-material";
 import Link from "next/link";
-import { auth } from "@/firebase/config";
+import { auth, firestore } from "@/firebase/config";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getAuth, signOut } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { setProductData } from "@/redux/Slice/productDataSlice";
-import { doc, getDoc, getFirestore, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getFirestore,
+  onSnapshot,
+} from "firebase/firestore";
 import { setShopData } from "@/redux/Slice/shopDataSlice";
+import { setSalesData } from "@/redux/Slice/dashboardSlice";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -107,7 +114,8 @@ export default function Nav({ children }) {
   const [open, setOpen] = React.useState(false);
   const [age, setAge] = React.useState("");
   const [user, stateLoading, stateError] = useAuthState(auth);
-
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
   //REDUX STORE LOADING
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
 
@@ -133,22 +141,72 @@ export default function Nav({ children }) {
   ];
   React.useEffect(() => {
     if (USER_DATA["shop_id"]) {
-      dispatch(setProductData({ product: [], loading: true }));
-      const db = getDatabase();
-      const shopRef = ref(db, "shop/" + USER_DATA["shop_id"]);
-      onValue(shopRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          dispatch(
-            setProductData({ product: Object.values(data), loading: false })
+      try {
+        dispatch(setProductData({ product: [], loading: true }));
+        setSalesData({ incomeData: [], loading: true });
+
+        const db = getDatabase();
+        const shopRef = ref(db, "shop/" + USER_DATA["shop_id"]);
+        onValue(shopRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            dispatch(
+              setProductData({ product: Object.values(data), loading: false })
+            );
+            shopData(USER_DATA["shop_id"]);
+          } else {
+            dispatch(setProductData({ product: [], loading: false }));
+          }
+        });
+
+        const dataget = async () => {
+          const documentRef = doc(
+            collection(
+              getFirestore(),
+              "dashboard",
+              USER_DATA["shop_id"],
+              year.toString()
+            ),
+            (currentDate.getMonth() + 1).toString()
           );
-          shopData(USER_DATA["shop_id"]);
-        } else {
-          dispatch(setProductData({ product: [], loading: false }));
-        }
-      });
+
+          try {
+            onSnapshot(documentRef, (snapshot) => {
+              if (snapshot.exists()) {
+                dispatch(
+                  setSalesData({ incomeData: snapshot.data(), loading: false })
+                );
+              } else {
+              }
+            });
+          } catch (error) {
+            console.error("Error getting document:", error);
+          }
+        };
+        dataget();
+        // const querySnapshot = getDoc(
+        //   doc(
+        //     collection(
+        //       getFirestore(),
+        //       "dashboard",
+        //       USER_DATA["shop_id"],
+        //       "2024",
+        //       "1"
+        //     )
+        //   )
+        // );
+
+        // if (querySnapshot.exists()) {
+        //   console.log("Document data:", querySnapshot.data());
+        // } else {
+        //   console.log("No such document!");
+        // }
+      } catch (error) {
+        console.log(error);
+      }
     }
   }, [USER_DATA]);
+
   const shopData = (id) => {
     const unsub = onSnapshot(doc(getFirestore(), "shop", id), (doc) => {
       if (doc.exists()) {

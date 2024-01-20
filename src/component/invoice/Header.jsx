@@ -9,7 +9,13 @@ import Box from "@mui/material/Box";
 
 import ItemsTable from "./ItemsTable";
 import InvoiceItemDialog from "./InvoiceItemDialog";
-import { Button, IconButton, InputAdornment, Tooltip } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Tooltip,
+} from "@mui/material";
 import { Add, Delete, Minimize, PlusOne, Remove } from "@mui/icons-material";
 import {
   addQty,
@@ -27,6 +33,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
+import loading from "@/app/loading";
+import { getDatabase, ref, update } from "firebase/database";
 
 export default function Header() {
   const [mobile, setMobile] = useState("");
@@ -46,13 +54,16 @@ export default function Header() {
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
   const [value, setValue] = React.useState("");
   const INVOICE_ITEMS = useSelector((state) => state.invoice_data.INVOICE_ITEM);
-
+  const MONTH_INCOME = useSelector(
+    (state) => state.dashboard_data.MONTH_INCOME
+  );
   const GRAND_TOTAL_COST = useSelector(
     (state) => state.invoice_data.GRAND_TOTAL_COST
   );
   const GRAND_TOTAL = useSelector((state) => state.invoice_data.GRAND_TOTAL);
   const SHOP_DATA = useSelector((state) => state.shop_data.SHOP_DATA);
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
+  const loading = useSelector((state) => state.shop_data.loading);
 
   const selectcategory = (event, value) => {
     setValue(value);
@@ -159,12 +170,13 @@ export default function Header() {
       const pushData = {
         name: name,
         mobile: mobile,
-        payment: [
+        payment_history: [
           {
             payment: parseFloat(payment),
             date: Timestamp.fromDate(currentDate),
           },
         ],
+        payment: parseFloat(payment),
         blance: parseFloat(payment) < GRAND_TOTAL ? true : false,
         items: INVOICE_ITEMS.map(({ cost, id, ...rest }) => rest),
         date: Timestamp.fromDate(currentDate),
@@ -175,16 +187,81 @@ export default function Header() {
 
       // Reference to the subcollection
       const db = getFirestore();
-      const userId = USER_DATA["shop_id"];
-      const year = "2024";
+      const shopId = USER_DATA["shop_id"];
 
       // Reference to the subcollection
-      // Make sure userId and year are valid values
-      const subcollectionRef = collection(doc(db, "invoice", userId), year);
+
+      const subcollectionRef = collection(
+        doc(db, "invoice", shopId),
+        year.toString()
+      );
 
       // Add a new document to the subcollection
       try {
         await addDoc(subcollectionRef, pushData);
+        await updateDoc(doc(db, "shop", shopId), {
+          invoice_number: SHOP_DATA["invoice_number"] + 1,
+        });
+
+        for (const e of INVOICE_ITEMS) {
+          const findItem = PRODUCT_DATA.find((item) => item.id === e["id"]);
+          console.log(e);
+          if (findItem) {
+            const updatedStock = findItem.stock - e.qty;
+
+            const updates = {
+              [`/shop/${USER_DATA.shop_id}/${findItem.id}/stock`]: updatedStock,
+            };
+
+            try {
+              await update(ref(getDatabase()), updates);
+            } catch (error) {
+              openScackbar({
+                open: true,
+                type: "error",
+                msg: `${findItem.name} inventory quantity not updated. Error: ${error}`,
+              });
+
+              // Handle the error as needed
+            }
+          }
+        }
+        //ADD TO DASHBOARD SUMMARY
+        if (MONTH_INCOME.day_income[`${currentDate.getDay()}`]) {
+          //!UPDATE CODFE DO THE THING
+          console.log("have data");
+        } else {
+          console.log("no data");
+        }
+
+        const dataToUpdate = {
+          // your data to update or create
+        };
+
+        // Use setDoc with { merge: true } option to create or update the document
+
+        setDoc(
+          collection(
+            doc(
+              db,
+              "dashboard",
+              shopId,
+              year.toString(),
+              (currentDate.getMonth + 1).toString(),
+              "day_income"
+            )
+          ),
+          dataToUpdate,
+          { merge: true }
+        )
+          .then(() => {
+            console.log("Document successfully written!");
+          })
+          .catch((error) => {
+            console.error("Error writing document: ", error);
+          });
+        //&&
+
         dispatch(
           openScackbar({ open: true, type: "success", msg: "Bill Updated" })
         );
@@ -199,6 +276,15 @@ export default function Header() {
   return (
     <div>
       <div>
+        <Typography variant="h5">
+          Invoice #
+          {!loading ? (
+            SHOP_DATA["invoice_number"] + 1
+          ) : (
+            <CircularProgress className="mx-2" size={20} />
+          )}
+        </Typography>
+
         <Typography variant="h6" className="">
           Date: {formattedDate}
         </Typography>

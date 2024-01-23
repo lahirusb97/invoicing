@@ -49,6 +49,7 @@ export default function Header() {
   const month = new Intl.DateTimeFormat("en-US", { month: "numeric" }).format(
     currentDate
   );
+
   const day = currentDate.getDate();
   const formattedDate = `${year}/${month}/${day}`;
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
@@ -64,7 +65,6 @@ export default function Header() {
   const SHOP_DATA = useSelector((state) => state.shop_data.SHOP_DATA);
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
   const loading = useSelector((state) => state.shop_data.loading);
-
   const selectcategory = (event, value) => {
     setValue(value);
   };
@@ -205,7 +205,7 @@ export default function Header() {
 
         for (const e of INVOICE_ITEMS) {
           const findItem = PRODUCT_DATA.find((item) => item.id === e["id"]);
-          console.log(e);
+
           if (findItem) {
             const updatedStock = findItem.stock - e.qty;
 
@@ -227,40 +227,85 @@ export default function Header() {
           }
         }
         //ADD TO DASHBOARD SUMMARY
-        if (MONTH_INCOME.day_income[`${currentDate.getDay()}`]) {
-          //!UPDATE CODFE DO THE THING
-          console.log("have data");
+        if (Object.keys(MONTH_INCOME).length === 0) {
+          console.log("obj not exsist");
+
+          // const subcollection = doc(getFirestore(), "dashboard", shopId);
+          const subcollection = doc(
+            collection(getFirestore(), "dashboard", shopId, year.toString()),
+            (currentDate.getMonth() + 1).toString()
+          );
+
+          const pushData = {
+            day_income: {
+              [currentDate.getDate()]: {
+                amount: GRAND_TOTAL,
+                cost: GRAND_TOTAL_COST,
+              },
+            },
+            total_income: GRAND_TOTAL,
+            total_cost: GRAND_TOTAL_COST,
+          };
+          try {
+            await setDoc(subcollection, pushData);
+          } catch (error) {
+            console.log(error);
+          }
+          //NO DATA EXSIST
         } else {
-          console.log("no data");
+          // Obj EXSIST
+          if (MONTH_INCOME.day_income[`${currentDate.getDate()}`]) {
+            const subcollection = doc(
+              collection(getFirestore(), "dashboard", shopId, year.toString()),
+              (currentDate.getMonth() + 1).toString()
+            );
+
+            // Create an object with the new data you want to add
+            const newData = {
+              day_income: {
+                ...MONTH_INCOME.day_income,
+                [currentDate.getDate()]: {
+                  amount:
+                    MONTH_INCOME.day_income[currentDate.getDate()].amount +
+                    GRAND_TOTAL,
+                  cost:
+                    MONTH_INCOME.day_income[currentDate.getDate()].cost +
+                    GRAND_TOTAL_COST,
+                },
+              },
+              total_income: MONTH_INCOME.total_income + GRAND_TOTAL,
+              total_cost: MONTH_INCOME.total_cost + GRAND_TOTAL_COST,
+            };
+
+            // Update the document with the new data
+            try {
+              await updateDoc(subcollection, newData);
+            } catch (error) {
+              openScackbar({ open: true, type: "error", msg: error });
+            }
+            //**************** */
+          } else {
+            console.log("obj exsist no day");
+
+            const subcollection = doc(
+              collection(getFirestore(), "dashboard", shopId, year.toString()),
+              (currentDate.getMonth() + 1).toString()
+            );
+
+            try {
+              await updateDoc(subcollection, {
+                [`day_income.${currentDate.getDate()}`]: {
+                  amount: GRAND_TOTAL,
+                  cost: GRAND_TOTAL_COST,
+                },
+                total_income: MONTH_INCOME.total_income + GRAND_TOTAL,
+                total_cost: MONTH_INCOME.total_cost + GRAND_TOTAL_COST,
+              });
+            } catch (error) {
+              openScackbar({ open: true, type: "error", msg: error });
+            }
+          }
         }
-
-        const dataToUpdate = {
-          // your data to update or create
-        };
-
-        // Use setDoc with { merge: true } option to create or update the document
-
-        setDoc(
-          collection(
-            doc(
-              db,
-              "dashboard",
-              shopId,
-              year.toString(),
-              (currentDate.getMonth + 1).toString(),
-              "day_income"
-            )
-          ),
-          dataToUpdate,
-          { merge: true }
-        )
-          .then(() => {
-            console.log("Document successfully written!");
-          })
-          .catch((error) => {
-            console.error("Error writing document: ", error);
-          });
-        //&&
 
         dispatch(
           openScackbar({ open: true, type: "success", msg: "Bill Updated" })

@@ -2,37 +2,16 @@
 import * as React from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
+
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
+
 import DialogTitle from "@mui/material/DialogTitle";
-import {
-  Autocomplete,
-  FormControlLabel,
-  FormHelperText,
-  Switch,
-  TextField,
-  useMediaQuery,
-} from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
+import { TextField, useMediaQuery } from "@mui/material";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { yupResolver } from "@hookform/resolvers/yup";
-
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-
 import * as yup from "yup";
 import { child, getDatabase, push, ref, update } from "firebase/database";
-import {
-  arrayRemove,
-  arrayUnion,
-  doc,
-  getFirestore,
-  increment,
-  updateDoc,
-} from "firebase/firestore";
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 import { editDialog } from "@/redux/Slice/editOpenSlice";
 
@@ -116,7 +95,6 @@ export default function EditItemDialog() {
 
   const AddNewProductData = async (data) => {
     const checkName = PRODUCT_DATA.filter((item) => item.name === ITEM.name);
-    console.log(checkName.length);
 
     if (checkName.length === 1) {
       //UPDATE

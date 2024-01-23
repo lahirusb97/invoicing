@@ -19,6 +19,7 @@ import {
   Calculate,
   Dashboard,
   DocumentScanner,
+  History,
   Inventory,
   Logout,
   People,
@@ -135,9 +136,7 @@ export default function Nav({ children }) {
     { name: "Dashboard", icon: <Dashboard />, rPath: "/admin/" },
     { name: "Inventory", icon: <Inventory />, rPath: "/admin/inventory" },
     { name: "Invoice", icon: <DocumentScanner />, rPath: "/admin/invoice" },
-    { name: "customers", icon: <People />, rPath: "/admin/customers" },
-    { name: "Audit", icon: <Calculate />, rPath: "/admin/audit" },
-    { name: "Settings", icon: <Settings />, rPath: "/admin/settings" },
+    { name: "Invoice History", icon: <History />, rPath: "/admin/history" },
   ];
   React.useEffect(() => {
     if (USER_DATA["shop_id"]) {

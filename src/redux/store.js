@@ -6,6 +6,7 @@ import SnackBarSlice from "./Slice/SnackBarSlice";
 import editDialog from "./Slice/editOpenSlice";
 import invoiceSlice from "./Slice/invoiceSlice";
 import dashboardSlice from "./Slice/dashboardSlice";
+import invoiceEditSlice from "./Slice/invoice/invoiceEditSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +17,6 @@ export const store = configureStore({
     edit_open: editDialog,
     dashboard_data: dashboardSlice,
     invoice_data: invoiceSlice,
+    invoice_edit_open: invoiceEditSlice,
   },
 });

@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import React from "react";
 
 import ToggleSwitch from "@/component/history/ToggleSwitch";
+import SnacBar from "@/component/SnacBar";
 
 export default function page() {
   return (

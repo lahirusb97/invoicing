@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  MONTH_INCOME: {},
+  MONTH_INCOME: {}, //current moth DATA ROOT DATA FOR BILING
+  DASHBOARD_DATA: {},
   loading: true,
   error: false,
 };
@@ -14,18 +15,17 @@ export const dashboardSlice = createSlice({
       const { incomeData, loading } = action.payload;
 
       state.MONTH_INCOME = incomeData;
-      // state.Month_INCOME = Object.entries(incomeData.day_income).map(
-      //   ([date, { Count }]) => ({
-      //     date,
-      //     amount,
-      //   })
-      // );
       state.loading = loading;
+      console.log(incomeData);
+    },
+    dashboardData: (state, action) => {
+      const { dashboardData } = action.payload;
+      state.DASHBOARD_DATA = dashboardData;
     },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { setSalesData } = dashboardSlice.actions;
+export const { setSalesData, dashboardData } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;

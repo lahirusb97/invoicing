@@ -21,12 +21,14 @@ import {
   doc,
   getDocs,
   getFirestore,
+  onSnapshot,
   query,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 import InvoiceEditDialog from "./InvoiceEditDialog";
+
 const AntSwitch = styled(Switch)(({ theme }) => ({
   width: 28,
   height: 16,
@@ -90,7 +92,7 @@ export default function ToggleSwitch() {
       const startOfMonthDate = dayjs(selectDate).startOf("month");
       const endOfMonthDate = dayjs(selectDate).endOf("month");
 
-      const querySnapshot = await getDocs(
+      const querySnapshot = onSnapshot(
         query(
           collection(
             getFirestore(),
@@ -100,26 +102,23 @@ export default function ToggleSwitch() {
           ),
           where("date", ">=", Timestamp.fromDate(startOfMonthDate.toDate())),
           where("date", "<=", Timestamp.fromDate(endOfMonthDate.toDate()))
-        )
-      ).catch((error) => {
-        dispatch(
-          openScackbar({ open: true, type: "error", msg: error.message })
-        );
-        setloadingInvoice(false);
-      });
+        ),
+        (querySnapshot) => {
+          const invoiceDataArray = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setInvoiceData(invoiceDataArray);
+          setloadingInvoice(false);
+        }
+      );
 
-      const invoiceDataArray = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setInvoiceData(invoiceDataArray);
-      setloadingInvoice(false);
+      return () => querySnapshot();
     } else {
       const startOfDay = dayjs(selectDate).startOf("day");
       const endOfDay = dayjs(selectDate).endOf("day");
 
-      const querySnapshot = await getDocs(
+      const querySnapshot = onSnapshot(
         query(
           collection(
             getFirestore(),
@@ -129,21 +128,18 @@ export default function ToggleSwitch() {
           ),
           where("date", ">=", Timestamp.fromDate(startOfDay.toDate())),
           where("date", "<=", Timestamp.fromDate(endOfDay.toDate()))
-        )
-      ).catch((error) => {
-        dispatch(
-          openScackbar({ open: true, type: "error", msg: error.message })
-        );
-        setloadingInvoice(false);
-      });
+        ),
+        (querySnapshot) => {
+          const invoiceDataArray = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setInvoiceData(invoiceDataArray);
+          setloadingInvoice(false);
+        }
+      );
 
-      const invoiceDataArray = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setInvoiceData(invoiceDataArray);
-      setloadingInvoice(false);
+      return () => querySnapshot();
     }
   };
   return (
@@ -177,7 +173,6 @@ export default function ToggleSwitch() {
           Filter Bills
         </Button>
       </div>
-
       <HistoryTable loading={loadingInvoice} invoiceData={invoiceData} />
       <InvoiceEditDialog />
     </div>

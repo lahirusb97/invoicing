@@ -35,6 +35,7 @@ import {
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 import loading from "@/app/loading";
 import { getDatabase, ref, update } from "firebase/database";
+import { openPrintDialog } from "@/redux/Slice/invoicePrintSlice";
 
 export default function Header() {
   const [mobile, setMobile] = useState("");
@@ -49,7 +50,12 @@ export default function Header() {
   const month = new Intl.DateTimeFormat("en-US", { month: "numeric" }).format(
     currentDate
   );
-
+  const timeFormat = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true, // Use 24-hour format
+  });
   const day = currentDate.getDate();
   const formattedDate = `${year}/${month}/${day}`;
   const PRODUCT_DATA = useSelector((state) => state.product_data.PRODUCT_DATA);
@@ -226,6 +232,23 @@ export default function Header() {
             }
           }
         }
+        dispatch(
+          openPrintDialog({
+            open: true,
+            data: {
+              name: name,
+              mobile: mobile,
+              items: INVOICE_ITEMS,
+              grand_total: GRAND_TOTAL,
+              payment: payment,
+              invoice_num: SHOP_DATA["invoice_number"] + 1,
+              date: `${currentDate.getFullYear()}/${
+                currentDate.getMonth() + 1
+              }/${currentDate.getDate()}`,
+              time: timeFormat.format(currentDate),
+            },
+          })
+        );
         //ADD TO DASHBOARD SUMMARY
         if (Object.keys(MONTH_INCOME).length === 0) {
           console.log("obj not exsist");
@@ -417,6 +440,29 @@ export default function Header() {
           data={INVOICE_ITEMS}
         />
       </div>
+      <Button
+        onClick={() => {
+          dispatch(
+            openPrintDialog({
+              open: true,
+              data: {
+                name: name,
+                mobile: mobile,
+                items: INVOICE_ITEMS,
+                grand_total: GRAND_TOTAL,
+                payment: payment,
+                invoice_num: SHOP_DATA["invoice_number"] + 1,
+                date: `${currentDate.getFullYear()}/${
+                  currentDate.getMonth() + 1
+                }/${currentDate.getDate()}`,
+                time: timeFormat.format(currentDate),
+              },
+            })
+          );
+        }}
+      >
+        Print
+      </Button>
     </div>
   );
 }

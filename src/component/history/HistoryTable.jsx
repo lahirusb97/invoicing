@@ -24,19 +24,32 @@ import { getDatabase, ref, remove } from "firebase/database";
 import {
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   getFirestore,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import {
   openCloseInvoiceEdit,
   setInvoiceData,
 } from "@/redux/Slice/invoice/invoiceEditSlice";
+import { openPrintDialog } from "@/redux/Slice/invoicePrintSlice";
+import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 
 const HistoryTable = ({ loading, invoiceData }) => {
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
 
+  const MONTH_INCOME = useSelector(
+    (state) => state.dashboard_data.MONTH_INCOME
+  );
+  const timeFormat = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true, // Use 24-hour format
+  });
   const dispatch = useDispatch();
   const columns = useMemo(
     () => [
@@ -102,8 +115,8 @@ const HistoryTable = ({ loading, invoiceData }) => {
     []
   );
   const [payment, setPayment] = useState("");
-  const handleNewPayment = (id) => {
-    if (payment.length > 0) {
+  const handleNewPayment = async (id) => {
+    if (payment.length > 0 && !parseInt(payment) <= 0) {
       //ADD NEW PAYMENT
       const data = invoiceData[id];
       const year = data.date.toDate().getFullYear().toString();
@@ -117,17 +130,115 @@ const HistoryTable = ({ loading, invoiceData }) => {
         data["id"]
       );
       updateDoc(subcollection, {
+        payment: invoiceData[id]["payment"] + parseInt(payment),
+
         payment_history: arrayUnion({
           date: new Date(),
-          payment: payment,
+          payment: parseInt(payment),
         }),
       })
         .then(() => {
-          console.log("ok");
+          const currentDate = new Date();
+          if (MONTH_INCOME.day_income.hasOwnProperty(new Date().getDate())) {
+            // The key exists in the object
+
+            const handleDashboard = async () => {
+              const subcollection = doc(
+                collection(
+                  getFirestore(),
+                  "dashboard",
+                  USER_DATA.shop_id,
+                  year.toString()
+                ),
+                (currentDate.getMonth() + 1).toString()
+              );
+              const newData = {
+                day_income: {
+                  [currentDate.getDate()]: {
+                    amount:
+                      MONTH_INCOME.day_income[currentDate.getDate()].amount +
+                      parseInt(payment),
+                    cost: MONTH_INCOME.day_income[currentDate.getDate()].cost,
+                  },
+                },
+                total_income: MONTH_INCOME.total_income + parseInt(payment),
+              };
+
+              // Update the document with the new data
+              try {
+                await updateDoc(subcollection, newData);
+                dispatch(
+                  openScackbar({
+                    open: true,
+                    type: "sucess",
+                    msg: "Invoice Updated",
+                  })
+                );
+                setPayment("");
+              } catch (error) {
+                dispatch(
+                  openScackbar({ open: true, type: "error", msg: error })
+                );
+              }
+            };
+            handleDashboard();
+            //**************** */
+          } else {
+            // The key does not exist in the object
+            const setDashboard = async () => {
+              const currentDate = new Date();
+
+              const subcollection = doc(
+                collection(
+                  getFirestore(),
+                  "dashboard",
+                  USER_DATA.shop_id,
+                  currentDate.getFullYear().toString()
+                ),
+                (currentDate.getMonth() + 1).toString()
+              );
+
+              const pushData = {
+                day_income: {
+                  [new Date().getDate()]: {
+                    amount: parseInt(payment),
+                    cost: 0,
+                  },
+                },
+                total_income: MONTH_INCOME.total_income + parseInt(payment),
+                total_cost: MONTH_INCOME.total_cost + parseInt(payment),
+              };
+              try {
+                await setDoc(subcollection, pushData);
+                setPayment("");
+
+                dispatch(
+                  openScackbar({
+                    open: true,
+                    type: "sucess",
+                    msg: "Invoice Updated",
+                  })
+                );
+              } catch (error) {
+                dispatch(
+                  openScackbar({ open: true, type: "error", msg: error })
+                );
+              }
+            };
+            setDashboard();
+          }
         })
         .catch((error) => {
-          console.log(error);
+          dispatch(openScackbar({ open: true, type: "error", msg: error }));
         });
+    } else {
+      dispatch(
+        openScackbar({
+          open: true,
+          type: "error",
+          msg: "payemnt input cant be empty or 0",
+        })
+      );
     }
   };
 
@@ -147,36 +258,27 @@ const HistoryTable = ({ loading, invoiceData }) => {
       enableRowActions
       renderRowActions={({ row }) => (
         <Box sx={{ display: "flex", gap: "1rem" }}>
-          <Tooltip title="Edit">
-            <IconButton
-              onClick={() => {
-                dispatch(openCloseInvoiceEdit(true));
-              }}
-            >
-              <Edit />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Delete">
             <IconButton
               color="error"
               onClick={async () => {
-                console.log(invoiceData[row.id].date.format("YYYY").toString());
-                // const shopRef = doc(
-                //   collection(
-                //     getFirestore(),
-                //     "invoice",
-                //     USER_DATA.shop_id,
-                //     invoiceData[row.id].date.format("YYYY").toString()
-                //   )
-                // )
-                //   // Remove the data
-                //   .remove(dataRef)
-                //   .then(() => {
-                //     console.log("Data deleted successfully");
-                //   })
-                //   .catch((error) => {
-                //     console.error("Error deleting data: ", error);
-                //   });
+                const shopRef = doc(
+                  collection(
+                    getFirestore(),
+                    "invoice",
+                    USER_DATA.shop_id,
+                    invoiceData[row.id].date.toDate().getFullYear().toString()
+                  ),
+                  invoiceData[row.id]["id"]
+                );
+                // Remove the data
+                await deleteDoc(shopRef)
+                  .then(() => {
+                    console.log("Data deleted successfully");
+                  })
+                  .catch((error) => {
+                    console.error("Error deleting data: ", error);
+                  });
               }}
             >
               <Delete />
@@ -260,7 +362,7 @@ const HistoryTable = ({ loading, invoiceData }) => {
                   </TableRow>
                   <TableRow>
                     <TableCell align="right" colSpan={4}>
-                      Total Paied Amoust
+                      Total Paied Amount
                     </TableCell>
                     <TableCell align="right">
                       Rs.{invoiceData[row.id]["payment"]}
@@ -286,16 +388,22 @@ const HistoryTable = ({ loading, invoiceData }) => {
                 <TableContainer component={Paper}>
                   <Table
                     size="small"
-                    sx={{ maxWidth: 300 }}
+                    sx={{ maxWidth: 350 }}
                     aria-label="spanning table"
                   >
                     <TableHead>
                       <TableRow className="bg-gray-700 ">
                         <TableCell
                           className="text-white font-semibold"
-                          align="left"
+                          align="center"
                         >
                           Date
+                        </TableCell>
+                        <TableCell
+                          className="text-white font-semibold"
+                          align="center"
+                        >
+                          Time
                         </TableCell>
                         <TableCell
                           className="text-white font-semibold"
@@ -311,6 +419,9 @@ const HistoryTable = ({ loading, invoiceData }) => {
                           <TableCell align="left" className="capitalize">
                             {row.date.toDate().toLocaleDateString()}
                           </TableCell>
+                          <TableCell align="left" className="capitalize">
+                            {timeFormat.format(row.date.toDate())}
+                          </TableCell>
                           <TableCell align="right">Rs.{row.payment}</TableCell>
                         </TableRow>
                       ))}
@@ -318,23 +429,60 @@ const HistoryTable = ({ loading, invoiceData }) => {
                   </Table>
                 </TableContainer>
               </div>
-              <div className="flex item-center mx-0 sm:mx-2">
-                <TextField
-                  type="number"
-                  onChange={(e) => setPayment(e.target.value)}
-                  value={payment}
-                  size="small"
-                  placeholder="Enter Coustomer Payment"
-                  label="new Payment"
-                  variant="outlined"
-                />
-                <Button
-                  onClick={() => handleNewPayment(row.id)}
-                  variant="contained"
+              {invoiceData[row.id].grand_total > invoiceData[row.id].payment ? (
+                <div className="flex item-center mx-0 sm:mx-2">
+                  <TextField
+                    type="number"
+                    onChange={(e) => setPayment(e.target.value)}
+                    value={payment}
+                    size="small"
+                    placeholder="Enter Coustomer Payment"
+                    label="new Payment"
+                    variant="outlined"
+                  />
+                  <Button
+                    onClick={() => handleNewPayment(row.id)}
+                    variant="contained"
+                  >
+                    Pay
+                  </Button>
+                </div>
+              ) : (
+                <Typography
+                  variant="h6"
+                  color={"success.main"}
+                  fontWeight={"bold"}
+                  margin={"0 10px"}
                 >
-                  Pay
-                </Button>
-              </div>
+                  Payment Complete
+                </Typography>
+              )}
+              <Button
+                variant="contained"
+                onClick={() => {
+                  dispatch(
+                    openPrintDialog({
+                      open: true,
+                      data: {
+                        name: invoiceData[row.id].name,
+                        mobile: invoiceData[row.id].mobile,
+                        items: invoiceData[row.id].items,
+                        grand_total: invoiceData[row.id].grand_total,
+                        payment: invoiceData[row.id].payment,
+                        invoice_num: invoiceData[row.id]["invoice_number"],
+                        date: `${invoiceData[row.id].date
+                          .toDate()
+                          .getFullYear()}/${
+                          invoiceData[row.id].date.toDate().getMonth() + 1
+                        }/${invoiceData[row.id].date.toDate().getDate()}`,
+                        time: timeFormat.format(invoiceData[row.id].date),
+                      },
+                    })
+                  );
+                }}
+              >
+                Print Invoice
+              </Button>
             </div>
           </div>
         </div>

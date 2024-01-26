@@ -7,6 +7,7 @@ import editDialog from "./Slice/editOpenSlice";
 import invoiceSlice from "./Slice/invoiceSlice";
 import dashboardSlice from "./Slice/dashboardSlice";
 import invoiceEditSlice from "./Slice/invoice/invoiceEditSlice";
+import invoicePrintSlice from "./Slice/invoicePrintSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,5 +19,6 @@ export const store = configureStore({
     dashboard_data: dashboardSlice,
     invoice_data: invoiceSlice,
     invoice_edit_open: invoiceEditSlice,
+    invoice_print: invoicePrintSlice,
   },
 });

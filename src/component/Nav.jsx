@@ -183,23 +183,6 @@ export default function Nav({ children }) {
           }
         };
         dataget();
-        // const querySnapshot = getDoc(
-        //   doc(
-        //     collection(
-        //       getFirestore(),
-        //       "dashboard",
-        //       USER_DATA["shop_id"],
-        //       "2024",
-        //       "1"
-        //     )
-        //   )
-        // );
-
-        // if (querySnapshot.exists()) {
-        //   console.log("Document data:", querySnapshot.data());
-        // } else {
-        //   console.log("No such document!");
-        // }
       } catch (error) {
         console.log(error);
       }

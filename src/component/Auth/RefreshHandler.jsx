@@ -38,7 +38,6 @@ export default function RefreshHandler({ children }) {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
-            console.log(doc.data());
             if (user.uid === doc.data().uid) {
               dispatch(setuserData({ user: doc.data(), loading: false }));
             }

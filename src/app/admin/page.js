@@ -16,9 +16,9 @@ export default function AdminPage() {
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
   const loading = useSelector((state) => state.user_data.loading);
   const [dashboardData, setDashboardData] = useState({});
-  const [date, setDate] = useState(new Date());
+
   const [selectDate, setSelectDate] = useState(dayjs(new Date()));
-  console.log(selectDate);
+
   const dataget = async () => {
     const documentRef = doc(
       collection(
@@ -96,7 +96,7 @@ export default function AdminPage() {
     ],
   };
   return (
-    <div className="flex items-center">
+    <div className="flex items-center flex-wrap justify-evenly">
       <Card className="max-w-xs" variant="elevation" elevation={2}>
         <div>
           <Typography className="p-2" variant="h6">
@@ -119,6 +119,7 @@ export default function AdminPage() {
         ></ReactEcharts>
       </Card>
       <div className=" overflow-auto">
+        <Typography variant="h6">Daily Income Chart</Typography>
         <DailyIncomeChart dashboardData={dashboardData} />
       </div>
     </div>

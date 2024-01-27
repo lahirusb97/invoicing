@@ -41,6 +41,8 @@ import {
 } from "firebase/firestore";
 import { setShopData } from "@/redux/Slice/shopDataSlice";
 import { setSalesData } from "@/redux/Slice/dashboardSlice";
+import { usePathname } from "next/navigation";
+import { Typography } from "@mui/material";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -119,7 +121,7 @@ export default function Nav({ children }) {
   const year = currentDate.getFullYear();
   //REDUX STORE LOADING
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
-
+  const pathName = usePathname();
   const dispatch = useDispatch();
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -133,11 +135,12 @@ export default function Nav({ children }) {
     setAge(event.target.value);
   };
   const listItem = [
-    { name: "Dashboard", icon: <Dashboard />, rPath: "/admin/" },
+    { name: "Dashboard", icon: <Dashboard />, rPath: "/admin" },
     { name: "Inventory", icon: <Inventory />, rPath: "/admin/inventory" },
     { name: "Invoice", icon: <DocumentScanner />, rPath: "/admin/invoice" },
     { name: "Invoice History", icon: <History />, rPath: "/admin/history" },
   ];
+
   React.useEffect(() => {
     if (USER_DATA["shop_id"]) {
       try {
@@ -219,11 +222,24 @@ export default function Nav({ children }) {
               >
                 <MenuIcon />
               </IconButton>
+              <Typography className="ml-4 text-black" variant="h6">
+                {pathName === "/admin/inventory"
+                  ? "Inventory"
+                  : pathName === "/admin/invoice"
+                  ? "Invoice"
+                  : pathName === "/admin/history"
+                  ? "Invoice History"
+                  : "Dashboard"}
+              </Typography>
             </div>
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
-          <DrawerHeader>
+          <DrawerHeader className="flex justify-between">
+            <Typography className="ml-4" variant="h6">
+              My Shop
+            </Typography>
+
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === "rtl" ? (
                 <ChevronRightIcon />
@@ -238,9 +254,15 @@ export default function Nav({ children }) {
               <ListItem
                 key={item["name"]}
                 disablePadding
-                sx={{ display: "block" }}
+                sx={{
+                  display: "block",
+                  bgcolor: pathName === item["rPath"] ? "#a039a9" : "white",
+                }}
               >
-                <Link href={item["rPath"]}>
+                <Link
+                  className="no-underline text-black hover:bg-slate-700"
+                  href={item["rPath"]}
+                >
                   <ListItemButton
                     sx={{
                       minHeight: 48,
@@ -253,13 +275,17 @@ export default function Nav({ children }) {
                         minWidth: 0,
                         mr: open ? 3 : "auto",
                         justifyContent: "center",
+                        color: pathName === item["rPath"] ? "white" : "black",
                       }}
                     >
                       {item["icon"]}
                     </ListItemIcon>
                     <ListItemText
                       primary={item["name"]}
-                      sx={{ opacity: open ? 1 : 0 }}
+                      sx={{
+                        opacity: open ? 1 : 0,
+                        color: pathName === item["rPath"] ? "white" : "black",
+                      }}
                     />
                   </ListItemButton>
                 </Link>

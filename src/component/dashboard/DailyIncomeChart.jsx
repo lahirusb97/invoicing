@@ -11,7 +11,7 @@ export default function DailyIncomeChart({ dashboardData }) {
     }
     return list;
   };
-  console.log(dataList());
+
   const app = {};
   const posList = [
     "left",
@@ -97,7 +97,7 @@ export default function DailyIncomeChart({ dashboardData }) {
     align: app.config.align,
     verticalAlign: app.config.verticalAlign,
     rotate: app.config.rotate,
-    formatter: "{c}  {name|{a}}",
+    formatter: "Rs.{c}  {name|{a}}",
     fontSize: 16,
     rich: {
       name: {},

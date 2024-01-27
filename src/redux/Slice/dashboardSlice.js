@@ -16,7 +16,6 @@ export const dashboardSlice = createSlice({
 
       state.MONTH_INCOME = incomeData;
       state.loading = loading;
-      console.log(incomeData);
     },
     dashboardData: (state, action) => {
       const { dashboardData } = action.payload;

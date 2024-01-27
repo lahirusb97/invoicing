@@ -19,36 +19,35 @@ export default function AdminPage() {
 
   const [selectDate, setSelectDate] = useState(dayjs(new Date()));
 
-  const dataget = async () => {
-    const documentRef = doc(
-      collection(
-        getFirestore(),
-        "dashboard",
-        USER_DATA["shop_id"],
-        selectDate["$y"].toString()
-      ),
-      (selectDate["$M"] + 1).toString()
-    );
-
-    try {
-      onSnapshot(documentRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setDashboardData(snapshot.data());
-        } else {
-          setDashboardData({
-            daily_income: {},
-            total_cost: 0,
-            total_income: 0,
-          });
-        }
-      });
-    } catch (error) {
-      console.error("Error getting document:", error);
-    }
-  };
-
   useEffect(() => {
     if (!loading) {
+      const dataget = async () => {
+        const documentRef = doc(
+          collection(
+            getFirestore(),
+            "dashboard",
+            USER_DATA["shop_id"],
+            selectDate["$y"].toString()
+          ),
+          (selectDate["$M"] + 1).toString()
+        );
+
+        try {
+          onSnapshot(documentRef, (snapshot) => {
+            if (snapshot.exists()) {
+              setDashboardData(snapshot.data());
+            } else {
+              setDashboardData({
+                daily_income: {},
+                total_cost: 0,
+                total_income: 0,
+              });
+            }
+          });
+        } catch (error) {
+          console.error("Error getting document:", error);
+        }
+      };
       dataget();
     }
   }, [loading, selectDate]);
@@ -61,6 +60,7 @@ export default function AdminPage() {
       top: "5%",
       left: "center",
     },
+    color: ["red", "green"],
     series: [
       {
         name: "Access From",
@@ -97,8 +97,12 @@ export default function AdminPage() {
   };
   return (
     <div className="flex items-center flex-wrap justify-evenly">
-      <Card className="max-w-xs" variant="elevation" elevation={2}>
-        <div>
+      <Card
+        className="flex items-center flex-wrap"
+        variant="elevation"
+        elevation={2}
+      >
+        <div className="mx-4">
           <Typography className="p-2" variant="h6">
             Monthly Total Income
           </Typography>
@@ -114,14 +118,16 @@ export default function AdminPage() {
           </LocalizationProvider>
         </div>
         <ReactEcharts
+          style={{ width: "400px", height: "400px" }}
           option={option}
-          style={{ width: "300px", height: "300px" }}
         ></ReactEcharts>
+        <div>
+          <Typography className="text-center" variant="h6">
+            Daily Income Chart
+          </Typography>
+          <DailyIncomeChart dashboardData={dashboardData} />
+        </div>
       </Card>
-      <div className=" overflow-auto">
-        <Typography variant="h6">Daily Income Chart</Typography>
-        <DailyIncomeChart dashboardData={dashboardData} />
-      </div>
     </div>
   );
 }

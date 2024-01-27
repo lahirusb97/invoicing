@@ -6,7 +6,7 @@ import Card from "@mui/material/Card";
 export default function page() {
   return (
     <div>
-      <Card variant="elevation" elevation={2}>
+      <Card className="p-2" variant="elevation" elevation={2}>
         <Header />
       </Card>
     </div>

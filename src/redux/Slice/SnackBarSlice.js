@@ -15,7 +15,6 @@ export const SnackBarSlice = createSlice({
       state.OPEN = open;
       state.TYPE = type;
       state.MSG = msg;
-      console.log(state.OPEN);
     },
     closeScackbar: (state) => {
       state.OPEN = false;

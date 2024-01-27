@@ -34,7 +34,7 @@ export default function InvoiceItemDialog() {
         open={open}
         onClose={handleClose}
       >
-        <div className="">
+        <div className="p-2">
           <Typography variant="h6">Select Items</Typography>
           <ItemsTable />
         </div>

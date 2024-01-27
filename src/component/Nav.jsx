@@ -155,6 +155,20 @@ export default function Nav({ children }) {
             dispatch(
               setProductData({ product: Object.values(data), loading: false })
             );
+            const shopData = (id) => {
+              const unsub = onSnapshot(
+                doc(getFirestore(), "shop", id),
+                (doc) => {
+                  if (doc.exists()) {
+                    dispatch(
+                      setShopData({ shopdata: doc.data(), loading: false })
+                    );
+                  } else {
+                    dispatch(setShopData({ shopdata: [], loading: false }));
+                  }
+                }
+              );
+            };
             shopData(USER_DATA["shop_id"]);
           } else {
             dispatch(setProductData({ product: [], loading: false }));
@@ -192,15 +206,6 @@ export default function Nav({ children }) {
     }
   }, [USER_DATA]);
 
-  const shopData = (id) => {
-    const unsub = onSnapshot(doc(getFirestore(), "shop", id), (doc) => {
-      if (doc.exists()) {
-        dispatch(setShopData({ shopdata: doc.data(), loading: false }));
-      } else {
-        dispatch(setShopData({ shopdata: [], loading: false }));
-      }
-    });
-  };
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />

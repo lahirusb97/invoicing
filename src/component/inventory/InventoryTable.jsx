@@ -45,73 +45,71 @@ const InventoryTable = ({ state, setState, setEdit, edit }) => {
   );
 
   return (
-    <MaterialReactTable
-      options={{
-        columnResizing: true,
-        width: "100vw",
-      }}
-      state={{ isLoading: loading }}
-      columns={columns}
-      data={PRODUCT_DATA}
-      enableRowActions
-      renderRowActions={({ row }) => (
-        <Box sx={{ display: "flex", gap: "1rem" }}>
-          <Tooltip title="Edit">
-            <IconButton
-              onClick={() => {
-                dispatch(editDialog(true));
-                dispatch(setItemData(PRODUCT_DATA[row.id]));
-              }}
-            >
-              <Edit />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              color="error"
-              onClick={async () => {
-                const shopRef = doc(
-                  getFirestore(),
-                  "shop",
-                  USER_DATA["shop_id"]
-                );
-                const category = CATEGORYS.find(
-                  (item) => item["Name"] === PRODUCT_DATA[row.id].category
-                );
-                console.log(category);
-                await updateDoc(shopRef, {
-                  category: {
-                    ...SHOP_DATA["category"],
-                    [category.Name]: {
-                      Count: category.Count - 1,
-                    },
-                  },
-                }).then(() => {
-                  const dataRef = ref(
-                    getDatabase(),
-                    "shop/" +
-                      USER_DATA["shop_id"] +
-                      "/" +
-                      PRODUCT_DATA[row.id]["id"]
+    <div className="w-screen2">
+      <MaterialReactTable
+        state={{ isLoading: loading }}
+        columns={columns}
+        data={PRODUCT_DATA}
+        enableRowActions
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: "flex", gap: "1rem" }}>
+            <Tooltip title="Edit">
+              <IconButton
+                onClick={() => {
+                  dispatch(editDialog(true));
+                  dispatch(setItemData(PRODUCT_DATA[row.id]));
+                }}
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton
+                color="error"
+                onClick={async () => {
+                  const shopRef = doc(
+                    getFirestore(),
+                    "shop",
+                    USER_DATA["shop_id"]
                   );
+                  const category = CATEGORYS.find(
+                    (item) => item["Name"] === PRODUCT_DATA[row.id].category
+                  );
+                  console.log(category);
+                  await updateDoc(shopRef, {
+                    category: {
+                      ...SHOP_DATA["category"],
+                      [category.Name]: {
+                        Count: category.Count - 1,
+                      },
+                    },
+                  }).then(() => {
+                    const dataRef = ref(
+                      getDatabase(),
+                      "shop/" +
+                        USER_DATA["shop_id"] +
+                        "/" +
+                        PRODUCT_DATA[row.id]["id"]
+                    );
 
-                  // Remove the data
-                  remove(dataRef)
-                    .then(() => {
-                      console.log("Data deleted successfully");
-                    })
-                    .catch((error) => {
-                      console.error("Error deleting data: ", error);
-                    });
-                });
-              }}
-            >
-              <Delete />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
-    />
+                    // Remove the data
+                    remove(dataRef)
+                      .then(() => {
+                        console.log("Data deleted successfully");
+                      })
+                      .catch((error) => {
+                        console.error("Error deleting data: ", error);
+                      });
+                  });
+                }}
+              >
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      />
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import HistoryTable from "@/component/history/HistoryTable";
 import Typography from "@mui/material/Typography";
 import React from "react";
 

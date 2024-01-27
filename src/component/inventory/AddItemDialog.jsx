@@ -359,7 +359,7 @@ export default function AddItemDialog() {
                       error={errors.category ? true : false}
                       helperText={errors.category && errors.category.message}
                       {...params}
-                      label="Movie"
+                      label="Select Category"
                     />
                   )}
                 />
@@ -400,6 +400,9 @@ export default function AddItemDialog() {
             </Button>
           </form>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
       </Dialog>
     </React.Fragment>
   );

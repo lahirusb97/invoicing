@@ -26,31 +26,31 @@ export default function RefreshHandler({ children }) {
 
   useEffect(() => {
     if (!stateLoading && user) {
+      const getuserData = async () => {
+        if (user) {
+          const citiesRef = collection(getFirestore(), "user");
+          const q = query(citiesRef, where("uid", "==", user.uid));
+
+          const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            if (!querySnapshot.empty) {
+              querySnapshot.forEach((doc) => {
+                if (user.uid === doc.data().uid) {
+                  dispatch(setuserData({ user: doc.data(), loading: false }));
+                }
+              });
+            } else {
+              dispatch(setuserData({ user: [], loading: false }));
+              route.push("/register");
+
+              setUidCheck(false);
+            }
+          });
+        }
+      };
       getuserData();
     }
   }, [user]);
 
-  const getuserData = async () => {
-    if (user) {
-      const citiesRef = collection(getFirestore(), "user");
-      const q = query(citiesRef, where("uid", "==", user.uid));
-
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach((doc) => {
-            if (user.uid === doc.data().uid) {
-              dispatch(setuserData({ user: doc.data(), loading: false }));
-            }
-          });
-        } else {
-          dispatch(setuserData({ user: [], loading: false }));
-          route.push("/register");
-
-          setUidCheck(false);
-        }
-      });
-    }
-  };
   return (
     <Box component="main" sx={{ flexGrow: 1, mt: 9, ml: 1 }}>
       {children}

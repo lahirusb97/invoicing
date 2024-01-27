@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase/config";
-export default function page() {
+export default function Page() {
   const [user] = useAuthState(auth);
 
   const [formData, setFormData] = useState({

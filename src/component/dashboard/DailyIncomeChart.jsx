@@ -1,5 +1,6 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
+import { BarChart } from "@mui/x-charts";
 
 export default function DailyIncomeChart({ dashboardData }) {
   const dataList = () => {
@@ -97,7 +98,7 @@ export default function DailyIncomeChart({ dashboardData }) {
     align: app.config.align,
     verticalAlign: app.config.verticalAlign,
     rotate: app.config.rotate,
-    formatter: "Rs.{c}  {name|{a}}",
+    formatter: "Rs.{c} ",
     fontSize: 16,
     rich: {
       name: {},
@@ -148,33 +149,53 @@ export default function DailyIncomeChart({ dashboardData }) {
           focus: "series",
         },
         data: dataList().map((item) => item.amount),
+        itemStyle: {
+          color: "black", // Set your desired color for this series
+        },
       },
       {
-        name: "profit",
+        name: "Profit",
         type: "bar",
         label: labelOption,
         emphasis: {
           focus: "series",
         },
         data: dataList().map((item) => item.amount - item.cost),
+        itemStyle: {
+          color: "green",
+          // Set your desired color for this series
+        },
       },
       {
-        name: "cost",
+        name: "Cost",
         type: "bar",
         label: labelOption,
         emphasis: {
           focus: "series",
         },
         data: dataList().map((item) => item.cost),
+        itemStyle: {
+          color: "red", // Set your desired color for this series
+        },
       },
     ],
   };
+
   return (
     <div>
       <ReactEcharts
+        style={{ width: "95vw", height: "300px" }}
         option={option2}
-        style={{ width: "600px", height: "600px" }}
       ></ReactEcharts>
+      {/* <BarChart
+        width={500}
+        height={300}
+        series={[
+          { data: pData, label: "pv", id: "pvId", stack: "total" },
+          { data: uData, label: "uv", id: "uvId", stack: "total" },
+        ]}
+        xAxis={[{ data: xLabels, scaleType: "band" }]}
+      /> */}
     </div>
   );
 }

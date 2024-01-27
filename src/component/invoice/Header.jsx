@@ -71,81 +71,77 @@ export default function Header() {
   const SHOP_DATA = useSelector((state) => state.shop_data.SHOP_DATA);
   const USER_DATA = useSelector((state) => state.user_data.USER_DATA);
   const loading = useSelector((state) => state.shop_data.loading);
+
   const selectcategory = (event, value) => {
     setValue(value);
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Product",
-        size: 200,
-      },
-      {
-        accessorKey: "qty",
-        header: (
-          <div className="text-center">
-            {" "}
-            {/* Apply the text-center class here */}
-            Qty
-          </div>
-        ),
-        size: 50,
+  const columns = useMemo(() => [
+    {
+      accessorKey: "name",
+      header: "Product",
+      size: 200,
+    },
+    {
+      accessorKey: "qty",
+      header: (
+        <div className="text-center">
+          {" "}
+          {/* Apply the text-center class here */}
+          Qty
+        </div>
+      ),
+      size: 50,
 
-        Cell: ({ renderedCellValue, row }) => (
-          <Box sx={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <IconButton
-              size="small"
-              color="success"
-              onClick={() => {
-                dispatch(addQty(row.id));
-              }}
-            >
-              <Add fontSize="small" />
-            </IconButton>
+      Cell: ({ renderedCellValue, row }) => (
+        <Box sx={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <IconButton
+            size="small"
+            color="success"
+            onClick={() => {
+              dispatch(addQty(row.id));
+            }}
+          >
+            <Add fontSize="small" />
+          </IconButton>
 
-            {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-            <h4>{renderedCellValue}</h4>
+          {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
+          <h4>{renderedCellValue}</h4>
 
-            <IconButton
-              size="small"
-              color="success"
-              onClick={() => {
-                dispatch(minusQty(row.id));
-              }}
-            >
-              <Remove fontSize="small" />
-            </IconButton>
-          </Box>
-        ),
-      },
+          <IconButton
+            size="small"
+            color="success"
+            onClick={() => {
+              dispatch(minusQty(row.id));
+            }}
+          >
+            <Remove fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
 
-      {
-        accessorKey: "warenty",
-        header: "Warranty",
-        size: 50,
-      },
-      {
-        accessorKey: "price",
-        header: (
-          <div style={{ position: "relative", textAlign: "left" }}>
-            <div className="text-end">Unit Price Rs</div>
-          </div>
-        ),
-        size: 50,
+    {
+      accessorKey: "warenty",
+      header: "Warranty",
+      size: 50,
+    },
+    {
+      accessorKey: "price",
+      header: (
+        <div style={{ position: "relative", textAlign: "left" }}>
+          <div className="text-end">Unit Price Rs</div>
+        </div>
+      ),
+      size: 50,
 
-        Cell: ({ renderedCellValue, row }) => (
-          <div className="flex justify-start">
-            <Typography className="text-end">
-              Rs. {renderedCellValue}
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-    []
-  );
+      Cell: ({ renderedCellValue, row }) => (
+        <div className="flex justify-start">
+          <Typography className="text-end">Rs. {renderedCellValue}</Typography>
+        </div>
+      ),
+    },
+  ]);
   const handleBill = async () => {
     if (name.length === 0) {
       setNameError(true);
@@ -344,7 +340,7 @@ export default function Header() {
   return (
     <div>
       <div>
-        <Typography variant="h5">
+        <Typography color={"blue"} variant="h6">
           Invoice #
           {!loading ? (
             SHOP_DATA["invoice_number"] + 1
@@ -358,32 +354,30 @@ export default function Header() {
         </Typography>
       </div>
       <div className=" flex items-center flex-wrap">
-        <div className="flex">
-          <TextField
-            type="text"
-            className="my-2 mr-2"
-            onChange={(e) => setName(e.target.value)}
-            size="small"
-            label="Customer Name"
-            value={name}
-            error={nameError}
-            helperText={nameError && "Enter Coustomer Name"}
-          />
-          <TextField
-            type="text"
-            className="my-2 mr-2"
-            onChange={(e) => setMobile(e.target.value)}
-            size="small"
-            label="Mobile Number"
-            value={mobile}
-            error={mobileError}
-            helperText={mobileError && "Enter Coustomer Mobile Number"}
-          />
-        </div>
+        <TextField
+          type="text"
+          className="my-2 mr-2"
+          onChange={(e) => setName(e.target.value)}
+          size="small"
+          label="Customer Name"
+          value={name}
+          error={nameError}
+          helperText={nameError && "Enter Coustomer Name"}
+        />
+        <TextField
+          type="text"
+          className="my-2 ml-0 sm:ml-2"
+          onChange={(e) => setMobile(e.target.value)}
+          size="small"
+          label="Mobile Number"
+          value={mobile}
+          error={mobileError}
+          helperText={mobileError && "Enter Coustomer Mobile Number"}
+        />
       </div>
       <InvoiceItemDialog />
 
-      <div style={{ marginBottom: "1em" }}>
+      <div className="w-screen2">
         <MaterialReactTable
           enableBottomToolbar
           options={{
@@ -393,7 +387,7 @@ export default function Header() {
           }}
           enableRowActions
           renderBottomToolbar={({ table }) => (
-            <div className="flex justify-center">
+            <div className="flex justify-center flex-warap">
               <div>
                 <Typography className="" variant="h6">
                   Grand Total : RS {GRAND_TOTAL}
@@ -440,29 +434,6 @@ export default function Header() {
           data={INVOICE_ITEMS}
         />
       </div>
-      <Button
-        onClick={() => {
-          dispatch(
-            openPrintDialog({
-              open: true,
-              data: {
-                name: name,
-                mobile: mobile,
-                items: INVOICE_ITEMS,
-                grand_total: GRAND_TOTAL,
-                payment: payment,
-                invoice_num: SHOP_DATA["invoice_number"] + 1,
-                date: `${currentDate.getFullYear()}/${
-                  currentDate.getMonth() + 1
-                }/${currentDate.getDate()}`,
-                time: timeFormat.format(currentDate),
-              },
-            })
-          );
-        }}
-      >
-        Print
-      </Button>
     </div>
   );
 }

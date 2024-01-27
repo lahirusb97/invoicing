@@ -156,7 +156,7 @@ export default function ToggleSwitch() {
           <Typography>Daily</Typography>
         </Stack>
       </FormGroup>
-      <div className="flex">
+      <div className="flex sm:flex-row flex-col">
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DemoContainer components={["DatePicker", "DatePicker"]}>
             <DatePicker
@@ -169,11 +169,17 @@ export default function ToggleSwitch() {
             />
           </DemoContainer>
         </LocalizationProvider>
-        <Button variant="contained" onClick={getInvoiceData}>
+        <Button
+          className="sm:my-0 my-2"
+          variant="contained"
+          onClick={getInvoiceData}
+        >
           Filter Bills
         </Button>
       </div>
-      <HistoryTable loading={loadingInvoice} invoiceData={invoiceData} />
+      <div className="w-screen2">
+        <HistoryTable loading={loadingInvoice} invoiceData={invoiceData} />
+      </div>
       <InvoiceEditDialog />
     </div>
   );

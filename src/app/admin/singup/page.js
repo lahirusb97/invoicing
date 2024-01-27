@@ -1,11 +1,14 @@
 "use client";
+import React, { useState } from "react";
 import { Button, TextField } from "@mui/material";
-import { useState } from "react";
 import { auth } from "@/firebase/config";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
-export default function page() {
+
+// Corrected component name to start with an uppercase letter
+export default function Page() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Corrected hook function name to start with "use"
   const [createUserWithEmailAndPassword] =
     useCreateUserWithEmailAndPassword(auth);
 
@@ -24,10 +27,11 @@ export default function page() {
         <TextField onChange={(e) => setEmail(e.target.value)} label="Email" />
         <TextField
           onChange={(e) => setPassword(e.target.value)}
-          label="password"
+          label="Password" // Corrected label
+          type="password" // Set the type attribute for password input
         />
         <Button onClick={handleLogin} variant="contained">
-          singup
+          Signup {/* Corrected the spelling of "signup" */}
         </Button>
       </div>
     </div>

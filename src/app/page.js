@@ -11,6 +11,7 @@ import {
   useAuthState,
   useSignInWithEmailAndPassword,
 } from "react-firebase-hooks/auth";
+
 import { auth } from "@/firebase/config";
 import { redirect, useRouter } from "next/navigation";
 import {
@@ -24,7 +25,7 @@ import {
 } from "firebase/firestore";
 import { useDispatch } from "react-redux";
 import { setuserData } from "@/redux/Slice/userDataSlice";
-import Image from "next/image";
+
 import { openScackbar } from "@/redux/Slice/SnackBarSlice";
 
 export default function Home() {
@@ -65,56 +66,52 @@ export default function Home() {
     } catch (error) {}
   };
   useEffect(() => {
-    if (user) {
-      getuserData();
-    }
+    const getuserData = async () => {
+      if (user) {
+        const citiesRef = collection(getFirestore(), "user");
+        const q = query(citiesRef, where("uid", "==", user.uid));
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          if (!querySnapshot.empty) {
+            querySnapshot.forEach((doc) => {
+              if (user.uid === doc.data().uid) {
+                dispatch(setuserData({ user: doc.data(), loading: false }));
+                route.push("/admin");
+                dispatch(
+                  openScackbar({
+                    open: true,
+                    type: "success",
+                    msg: "login success",
+                  })
+                );
+              }
+            });
+          } else {
+            dispatch(setuserData({ user: [], loading: false }));
+            route.push("/register");
+
+            setUidCheck(false);
+            dispatch(
+              openScackbar({
+                open: true,
+                type: "success",
+                msg: "login success",
+              })
+            );
+          }
+        });
+      }
+    };
+    getuserData();
   }, [user]);
-
-  const getuserData = async () => {
-    if (user) {
-      const citiesRef = collection(getFirestore(), "user");
-      const q = query(citiesRef, where("uid", "==", user.uid));
-
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach((doc) => {
-            console.log(doc.data());
-            if (user.uid === doc.data().uid) {
-              dispatch(setuserData({ user: doc.data(), loading: false }));
-              route.push("/admin");
-              dispatch(
-                openScackbar({
-                  open: true,
-                  type: "success",
-                  msg: "login success",
-                })
-              );
-            }
-          });
-        } else {
-          dispatch(setuserData({ user: [], loading: false }));
-          route.push("/register");
-
-          setUidCheck(false);
-          dispatch(
-            openScackbar({
-              open: true,
-              type: "success",
-              msg: "login success",
-            })
-          );
-        }
-      });
-    }
-  };
 
   return (
     <div>
-      <div className="w-screen h-screen m-2 flex justify-center items-center flex-wrap">
+      <div className="h-screen flex justify-center items-center flex-wrap">
         <Card
           variant="elevation"
           elevation={2}
-          className="flex flex-col p-2 w-96 items-center justify-center"
+          className="flex flex-col p-2 w-full sm:w-96 items-center justify-center"
         >
           <Typography
             fontWeight={"bold"}
@@ -123,18 +120,8 @@ export default function Home() {
           >
             Login In
           </Typography>
-          <Image
-            alt="login"
-            style={{
-              objectFit: "cover",
-              maxWidth: "100%",
-              maxHeight: "100%",
-              backgroundPosition: "center",
-            }}
-            width={400}
-            height={400}
-            src={"/login.jpg"}
-          />
+
+          <img alt="login" width={380} src="/login.jpg" />
 
           <TextField
             fullWidth
@@ -144,7 +131,7 @@ export default function Home() {
             focused
           />
           <TextField
-            className="my-4"
+            sx={{ my: "1em" }}
             fullWidth
             onChange={(e) => setPassword(e.target.value)}
             label="password"

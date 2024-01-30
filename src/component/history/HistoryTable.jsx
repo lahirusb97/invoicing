@@ -116,7 +116,12 @@ const HistoryTable = ({ loading, invoiceData }) => {
   );
   const [payment, setPayment] = useState("");
   const handleNewPayment = async (id) => {
-    if (payment.length > 0 && !parseInt(payment) <= 0) {
+    if (
+      payment.length > 0 &&
+      parseInt(payment) >= 0 &&
+      parseInt(payment) <=
+        invoiceData[id]["grand_total"] - invoiceData[id]["payment"]
+    ) {
       //ADD NEW PAYMENT
       const data = invoiceData[id];
       const year = data.date.toDate().getFullYear().toString();
@@ -170,7 +175,7 @@ const HistoryTable = ({ loading, invoiceData }) => {
                 dispatch(
                   openScackbar({
                     open: true,
-                    type: "sucess",
+                    type: "success",
                     msg: "Invoice Updated",
                   })
                 );
@@ -215,7 +220,7 @@ const HistoryTable = ({ loading, invoiceData }) => {
                 dispatch(
                   openScackbar({
                     open: true,
-                    type: "sucess",
+                    type: "success",
                     msg: "Invoice Updated",
                   })
                 );
@@ -232,13 +237,40 @@ const HistoryTable = ({ loading, invoiceData }) => {
           dispatch(openScackbar({ open: true, type: "error", msg: error }));
         });
     } else {
-      dispatch(
-        openScackbar({
-          open: true,
-          type: "error",
-          msg: "payemnt input cant be empty or 0",
-        })
-      );
+      //! Imput Error Handling
+
+      if (
+        parseInt(payment) >=
+        invoiceData[id]["grand_total"] - invoiceData[id]["payment"]
+      ) {
+        dispatch(
+          openScackbar({
+            open: true,
+            type: "error",
+            msg: `coustomer only need to pay Rs. ${
+              invoiceData[id]["grand_total"] - invoiceData[id]["payment"]
+            }`,
+          })
+        );
+      }
+      if (parseInt(payment) <= 0) {
+        dispatch(
+          openScackbar({
+            open: true,
+            type: "error",
+            msg: "Payment should be greater than 0",
+          })
+        );
+      }
+      if (parseInt(payment).length === 0) {
+        dispatch(
+          openScackbar({
+            open: true,
+            type: "error",
+            msg: "Payment cant be empty",
+          })
+        );
+      }
     }
   };
 
